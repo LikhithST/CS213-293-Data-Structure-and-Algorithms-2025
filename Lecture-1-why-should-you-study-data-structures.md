@@ -1,59 +1,76 @@
-# Why Study Data Structures?
+# Why Should You Study "Data Structures"?
 
-## Learning goals
+## 1. What is Data?
 
-By the end of this lecture, you should be able to:
+Things themselves are not data; rather, **information about things is data**.
 
-- distinguish data, a problem, and an algorithm;
-- write a precise specification for a search problem;
-- explain why organizing data can make a problem much faster to solve; and
-- compare linear search with binary search on a sorted array.
+- **Examples of Data:** Age of people ($21$), height of trees ($14.5\text{ m}$), price of stocks ($\$182.50$), and number of likes on a post ($10\,420$).
+- **The Era of Big Data:** We live in an era where data is massive. We must **process** this data to solve real-world **problems**—such as predicting the weather, finding a webpage, or recognizing a fingerprint.
+- **The Cost of Disorganized Data:** Disorganized data requires a significant amount of time to process (for example, the time required to find an element in an unsorted array).
 
-## 1. Data and computation
+> [!NOTE]
+> **Central Goal:** We can exploit structure in organized data to **design efficient algorithms** that solve our problems. This is the primary goal of this course.
 
-**Data** is information about things, rather than the things themselves. For example, a person's age, a tree's height, a stock's price, or a post's number of likes are all data.
+---
 
-Modern applications collect very large amounts of data. To solve useful problems—such as weather prediction, web search, or fingerprint recognition—we must process that data. When data is disorganized, even a simple operation such as finding one item can take a long time.
+## 2. Problem
 
-> **Central idea:** The way data is organized can be used to design more efficient algorithms.
+A computational **problem** is formally defined as a pair of specifications:
+1. **Input Specification:** The given inputs and their conditions.
+2. **Output Specification:** The desired result that must be produced for valid inputs.
 
-This is the purpose of studying data structures: they represent and organize data so that required operations can be performed efficiently.
+$$\text{Problem} = \langle \text{Input Specification}, \; \text{Output Specification} \rangle$$
 
-## 2. Problems are specifications
+### Example: The Problem of Search
 
-A computational **problem** is defined by two parts:
+| Component | Specification |
+|---|---|
+| **Input Specification** | An array $S$ of elements and an element $e$. |
+| **Output Specification** | The position (index) of $e$ in $S$ if it exists. If it is not found, return $-1$. |
 
-1. **Input specification** — the form and conditions of the input.
-2. **Output specification** — what result must be produced for a valid input.
+> [!NOTE]
+> Output specifications refer directly to the variables defined in the input specifications.
 
-### Example: search
+### Exercise: Multiple Occurrences
+**Question:** According to the specification, what should happen if $e$ occurs multiple times in $S$?
 
-| Part | Specification |
-| --- | --- |
-| Input | An array `S` of elements and an element `e`. |
-| Output | A position of `e` in `S` if `e` occurs; otherwise `-1`. |
+**Answer:** The output specification requires returning the position of $e$ in $S$ if it exists. Since it does not specify returning the *first* or *last* position, returning the index of **any** valid occurrence of $e$ satisfies the specification. If a particular occurrence is required, that must be explicitly stated in the output specification.
 
-The output specification is expressed using the input: the returned position must refer to the given array `S` and element `e`.
+---
 
-### Important edge case
+## 3. Algorithm
 
-If `e` occurs more than once, the specification above permits returning **any** position containing `e`. If the application requires the first or last occurrence, that requirement must be stated explicitly.
+An **algorithm** solves a given problem by taking valid inputs and producing the corresponding outputs:
 
-## 3. Algorithms and programs
+- $\text{Input} \in \text{Input Specifications}$
+- $\text{Output} \in \text{Output Specifications}$
 
-An **algorithm** is a finite, step-by-step method that solves a problem. It accepts an input satisfying the input specification and produces an output satisfying the output specification.
+> [!NOTE]
+> There can be many different algorithms to solve the same problem.
 
-Several different algorithms may solve the same problem. They can differ greatly in the amount of time or memory they need.
+### Exercise 1.4: Algorithms vs. Programs
 
-A **program** is a concrete implementation of an algorithm in a programming language. An algorithm is language-independent; a program also includes implementation details such as syntax, types, input/output, and interaction with a machine.
+1. **What truly is an algorithm?**
+   - An algorithm is a step-by-step process that processes a small amount of data in each step and eventually computes the output.
+   - *Commentary:* It took the genius of Alan Turing to provide a precise mathematical definition of an algorithm (which is studied formally in CS310).
 
-## 4. Linear search: no structure to exploit
+2. **How is an algorithm different from a program?**
+   - An **algorithm** is an abstract, step-by-step procedure to solve a problem, independent of any specific programming language or machine.
+   - A **program** is a concrete implementation of an algorithm written in a specific programming language (like C++) that can be compiled and executed on a computer.
 
-For an arbitrary (unsorted) array, a direct solution is to inspect each element from left to right until the target is found.
+---
+
+## 4. Linear Search on Unstructured Data
+
+When data in an array $S$ has no special order or structure, an algorithm must inspect elements one by one.
+
+### Example Algorithm for Search
 
 ```cpp
-int search(const int* S, int n, int e) {
-    for (int i = 0; i < n; ++i) {
+int search(int* S, int n, int e) {
+    // n is length of array S
+    // We are looking for element e in S
+    for (int i = 0; i < n; i++) {
         if (S[i] == e) {
             return i;
         }
@@ -62,202 +79,158 @@ int search(const int* S, int n, int e) {
 }
 ```
 
-### Running time — Exercise 1.5
+### Note: Pointers and Array Decay in C/C++
 
-**Question:** What is the running time when `e` is not in `S`?
+In C and C++, `int* S` and `int S[]` are completely identical when used in a function parameter list:
+- When you pass an array to a function, the array automatically **decays into a pointer** to its first element.
+- Because of this, the compiler rewrites array notation in parameter lists:
+  - `int S[]` is converted by the compiler to `int* S`.
+  - `int S[10]` is also converted to `int* S` (the size inside brackets is ignored).
+- Both declarations mean the exact same thing to the compiler: $S$ is a pointer to the first integer in memory.
 
-In that case, the loop completes all `n` iterations. The analysis below counts an abstract set of machine-level operations. It is a cost model: a compiler may emit different instructions, but the count makes the growth of the program explicit.
+**Why `S[i]` works with a pointer:**
+The subscript operator `S[i]` is syntactic sugar for pointer arithmetic and dereferencing:
 
-#### Arithmetic and comparison operations: `(3n + 2)TArith`
+$$S[i] \equiv *(S + i)$$
 
-| Operation | Number of executions |
-| --- | ---: |
-| Initialization: `i = 0` | `1` |
-| Loop condition: `i < n` | `n + 1` |
-| Equality check: `S[i] == e` | `n` |
-| Increment: `i++` | `n` |
-| **Total** | **`3n + 2`** |
+Since $S$ points to the start of the array, $S + i$ calculates the memory address of the $i$-th element, and `*` dereferences it to read the value from memory.
 
-The loop condition has one additional execution: its final false evaluation when `i = n`.
+---
 
-#### Jump and branch operations: `(2n + 1)TJump`
+### Exercise 1.5: Running Time Analysis
 
-In a typical unoptimized assembly layout, control first jumps to the loop-condition check, then branches after the equality check and after the loop-condition check.
+**Question:** What is the running time of the search algorithm if $e$ is not in $S$?
 
-| Operation | Number of executions |
-| --- | ---: |
-| Initial jump to the loop condition | `1` |
-| Equality-test branch when no match is found | `n` |
-| Loop-condition branch that repeats the loop | `n` |
-| **Total** | **`2n + 1`** |
-
-There are also `n` reads of `S[i]` and one final `return -1`.
-
-Let `TRead`, `TArith`, `TJump`, and `TReturn` be the times for an array read, arithmetic/comparison operation, jump, and return, respectively. The total running time is:
-
-\[
-T(n) = nT_{Read} + (3n + 2)T_{Arith} + (2n + 1)T_{Jump} + T_{Return}
-\]
-
-All operation counts are linear in `n`, so this exact expression simplifies asymptotically to **Θ(n)**, and hence **O(n)**. This is a useful distinction:
-
-- the expression above is a **machine-operation cost model**;
-- Θ(n) is its **growth-rate summary**, independent of fixed instruction costs.
-
-The exact constants can vary with the compiler, processor, and generated assembly, but the number of loop iterations—and therefore the linear growth—does not.
-
-### From assembly code to CPU cycles to Big-O
-
-The compiler converts the C++ function first into **assembly language** and then into the binary machine instructions executed by the CPU. The exact assembly depends on the compiler, optimization level, and processor. For example, an optimized x86-64 compiler may produce a loop *similar to* this (register choices and labels are not important):
+When $e \notin S$, the search fails and the loop completes all $n$ iterations before returning $-1$.
 
 ![From C++ source to instruction set](Images/cpp-to-instruction-set.png)
 
-```asm
-# rdi = address of S, rsi = n, edx = e, rax = i
-.loop:
-    cmpl  %edx, (%rdi,%rax,4)  # compare S[i] with e
-    je    .found               # if equal, return i
-    addq  $1, %rax             # i++
-    cmpq  %rsi, %rax           # compare i with n
-    jne   .loop                # repeat while i != n
-```
+We categorize the execution costs into four types of machine-level operations:
+- $T_{\text{Read}}$: Cost of a memory access ($S[i]$).
+- $T_{\text{Arith}}$: Cost of basic arithmetic, assignments, and comparisons.
+- $T_{\text{Jump}}$: Cost of jump and branch instructions (conditional and unconditional).
+- $T_{\text{Return}}$: Cost of function exit / return.
 
-For a failed search, this loop runs `n` times. Each iteration executes a constant-sized group of instructions: one memory read/compare, one increment, one bound comparison, and conditional branches. This is the assembly-level origin of the operation counts in Exercise 1.5.
+#### 1. Arithmetic & Comparison Operations: $(3n + 2) T_{\text{Arith}}$
 
-The CPU does not run the written assembly text; it runs its assembled machine-code equivalent. Every machine instruction consumes CPU resources and takes one or more **CPU clock cycles**. If a processor runs at clock frequency `f` hertz, one clock cycle lasts
+- **Initialization (`i = 0`):** Runs **$1$** time.
+- **Loop condition evaluation (`i < n`):** Evaluated **$n + 1$** times ($n$ times when true, plus $1$ final check when $i = n$ to exit the loop).
+- **Loop increment (`i++`):** Runs **$n$** times (at the end of each iteration).
+- **Equality check (`S[i] == e`):** Runs **$n$** times (checked once per iteration).
 
-\[
-T_{clock} = \frac{1}{f}\text{ seconds}.
-\]
+Adding these together:
 
-For example, at `3 GHz`, a clock cycle is approximately `1 / (3 × 10⁹)` seconds, or `0.33 ns`. Suppose this particular loop costs an average of `c` cycles per iteration, including its load, comparisons, and branch. For a failed search:
+$$1 + (n + 1) + n + n = 3n + 2$$
 
-\[
-\text{cycles}(n) \approx cn+d,
-\]
+#### 2. Jump & Branch Operations: $(2n + 1) T_{\text{Jump}}$
 
-where `d` is the fixed setup and return cost. The corresponding elapsed CPU time is
+- **Initial jump to loop condition:** In standard compiler code generation (such as line 8 `jmp .L2`), the program performs **$1$** unconditional jump to reach the initial condition check.
+- **Loop condition branch:** The conditional branch to repeat the loop body (line 25 `jl .L5`) is taken **$n$** times.
+- **Equality branch:** The conditional branch when the element is not found in that iteration (line 17 `jne .L3`) is taken **$n$** times.
 
-\[
-\text{CPU time} \approx \frac{cn+d}{f}\text{ seconds}.
-\]
+Adding these together:
 
-This explains how a machine-level cost model such as
+$$1 + n + n = 2n + 1$$
 
-\[
-nT_{Read} + (3n+2)T_{Arith} + (2n+1)T_{Jump} + T_{Return}
-\]
+#### 3. Memory Accesses: $n T_{\text{Read}}$
 
-is obtained: count how often each kind of work appears in the assembly, then multiply by its cost. In practice, `c` is an average rather than a universal fixed number:
+- In each of the $n$ iterations, there is **$1$** memory read to fetch $S[i]$, giving a total of **$n$** memory accesses.
 
-- a memory read may be fast if the value is in cache, or much slower after a cache miss;
-- modern CPUs can pipeline or execute independent instructions in parallel;
-- branch prediction affects the cost of conditional jumps; and
-- a compiler may optimize, rearrange, or even remove instructions.
+#### 4. Return Operation: $1 \cdot T_{\text{Return}}$
 
-The constants `c`, `d`, and `f` change between machines and builds. To compare algorithms in a machine-independent way, we retain only how the running time grows as input size `n` grows:
+- **`return -1;`:** Executed exactly **$1$** time after the loop finishes.
 
-\[
-cn+d \in \Theta(n).
-\]
+#### Total Execution Time
 
-Therefore, failed linear search has **linear time**, written **Θ(n)** (and consequently **O(n)**). Big-O deliberately ignores the constant cycles per iteration, clock speed, and lower-order terms; it answers the more durable question: *how does the work scale when the input becomes large?*
+Summing the individual costs produces the final analytical expression:
 
-> In a function parameter list, `int S[]` and `int* S` describe the same parameter type in C/C++. Array indexing is equivalent to pointer-offset dereferencing: `S[i]` means `*(S + i)`.
+$$T(n) = n T_{\text{Read}} + (3n + 2) T_{\text{Arith}} + (2n + 1) T_{\text{Jump}} + T_{\text{Return}}$$
 
-## 5. Structured data enables faster search
+> [!TIP]
+> **Godbolt Assembly Verification:** You can pass this C++ program to [Godbolt Compiler Explorer](https://godbolt.org/) and inspect the generated assembly instructions to verify that this breakdown faithfully models the generated machine code.
 
-Now strengthen the input specification:
+---
 
-| Part | Specification |
-| --- | --- |
-| Input | A **non-decreasing (sorted)** array `S` and an element `e`. |
-| Output | A position of `e` in `S` if it occurs; otherwise `-1`. |
+## 5. Structured Data Helps Us Solve Problems Faster
 
-Sorting is useful structure. On comparing `e` with the middle element:
+When data is organized with structure, we can exploit that structure to design much more efficient algorithms.
 
-- if the middle element equals `e`, the search is complete;
-- if it is greater than `e`, `e` cannot appear in the right half;
-- if it is less than `e`, `e` cannot appear in the left half.
+### Example 1.6: Search on Well-Structured Data
 
-Thus, one comparison discards roughly half of the remaining search space. Repeating this process gives **binary search**.
+| Component | Specification |
+|---|---|
+| **Input Specification** | A **non-decreasing (sorted)** array $S$ and an element $e$. |
+| **Output Specification** | Position of $e$ in $S$ if it exists. If it is not found, return $-1$. |
 
-![Binary-search illustration](Images/binary-search.png)
+### Exploiting the Sorted Structure
 
-## 6. Binary search
+Let us search for $68$ in a sorted array:
+1. Look at the middle point of the array.
+2. Since the value at the middle point is less than $68$, and the array is sorted in non-decreasing order, $68$ cannot appear in the lower half.
+3. We search only in the upper half.
+4. We have **halved our search space** in a single comparison.
+5. We recursively repeat this process, halving the search space at each step.
 
-The following version searches a sorted array using the half-open interval `[first, last)`: `first` is included and `last` is excluded.
+![Binary search](Images/binary-search.png)
+
+---
+
+## 6. Binary Search
+
+### Example 1.7: Binary Search Algorithm
 
 ```cpp
-int binarySearch(const int* S, int n, int e) {
-    int first = 0;
-    int last = n;
+int BinarySearch(int* S, int n, int e) {
+    // S is a sorted array
+    int first = 0, last = n;
+    int mid = (first + last) / 2;
 
     while (first < last) {
-        int mid = first + (last - first) / 2;
-
-        if (S[mid] == e) {
-            return mid;
-        }
+        if (S[mid] == e) return mid;
         if (S[mid] > e) {
             last = mid;
         } else {
             first = mid + 1;
         }
+        mid = (first + last) / 2;
     }
     return -1;
 }
 ```
 
-### Why the interval updates are correct
+---
 
-- When `S[mid] > e`, the sorted order guarantees that `e` cannot be at `mid` or to its right, so the new interval is `[first, mid)`.
-- When `S[mid] < e`, `e` cannot be at `mid` or to its left, so the new interval is `[mid + 1, last)`.
+### Exercise 1.6: Running Time when $n = 2^k - 1$ and $S[0] > e$
 
-The interval becomes smaller in every iteration. If it becomes empty, then `e` is not in the array.
+**Question:** Let $n = 2^k - 1$. How much time and how many operations will it take to run the algorithm if $S[0] > e$?
 
-### Running time comparison
+#### Step-by-Step Analysis
 
-| Algorithm | Required input structure | Worst-case elements/comparisons | Time complexity |
-| --- | --- | --- | --- |
-| Linear search | None | `n` | O(n) |
-| Binary search | Sorted array | about `log₂ n` | O(log n) |
+Because the array $S$ is non-decreasing and $S[0] > e$, the target $e$ is strictly smaller than the very first element, and therefore smaller than every element in $S$:
 
-For example, binary search needs at most about 20 halving steps to narrow a search among one million elements, whereas a failed linear search may inspect all one million.
+$$e < S[0] \le S[1] \le \dots \le S[n-1]$$
 
-### Exercise 1.6: binary search when the target is too small
+1. **Step 1:** The algorithm checks the middle element $S[\text{mid}]$. Since $S[\text{mid}] \ge S[0] > e$, the condition $S[\text{mid}] > e$ holds true.
+2. **Subsequent Steps:** Because $e < S[0] \le S[\text{mid}]$, every iteration takes the branch `last = mid`, discarding the entire right half of the search space and continuing only on the left subarray.
+3. **Total Halvings of Search Space:**
+   Starting from size $n = 2^k - 1$:
+   - After 1st halving: search space size is $2^{k-1} - 1$
+   - After 2nd halving: search space size is $2^{k-2} - 1$
+   - $\dots$
+   - After $(k-1)$-th halving: search space size is $2^1 - 1 = 1$
+   - After $k$-th halving: search space size is $2^0 - 1 = 0$ (interval becomes empty, loop terminates)
 
-Assume the intended expression is \(n = 2^k - 1\), and `S[0] > e`. Because the array is non-decreasing, `e` is smaller than **every** element of `S`.
+The search space of size $n = 2^k - 1$ is repeatedly halved until the base case is reached:
 
-At every iteration, binary search compares `e` with the middle element and takes the `S[mid] > e` branch. It discards the right half, including `mid`, leaving the left half.
+$$\log_2(n + 1) = \log_2(2^k) = k \text{ iterations / comparisons}$$
 
-\[
-2^k - 1 \;\to\; 2^{k-1} - 1 \;\to\; \cdots \;\to\; 1 \;\to\; 0
-\]
+#### Comparison of Efficiency
 
-There are exactly `k` iterations (halvings) before the interval is empty. Thus:
+| Algorithm | Input Structure Required | Operations for Size $n = 2^k - 1$ (Failed Search) |
+|---|---|---|
+| **Linear Search** | Unstructured array | Inspects all $n = 2^k - 1$ elements ($3n + 2$ arithmetic operations, $2n + 1$ jumps) |
+| **Binary Search** | Sorted array | Only $k = \log_2(n + 1)$ halvings / comparisons |
 
-- counting one three-way middle-element comparison per iteration: `k` comparisons;
-- in the C++ code as written, which tests `S[mid] == e` and then `S[mid] > e` separately: `2k` element-comparisons, because equality is false every time;
-- including loop-condition checks adds `k + 1` further control comparisons.
-
-All of these counts are proportional to `k`. Since \(k = \log_2(n+1)\), the running time is **Θ(log n)**, and therefore **O(log n)**.
-
-## 7. Takeaways
-
-- Precise input and output specifications define a problem.
-- Algorithms solve specifications; programs implement algorithms.
-- Unstructured data may force us to inspect many items.
-- Useful data structure properties—such as sorted order—allow algorithms to eliminate impossible cases quickly.
-- The benefit of a data structure must be considered with its costs: keeping an array sorted can itself require work when elements are inserted or removed.
-
-## Practice questions
-
-1. How would the search specification change if it must return the first occurrence of `e`?
-2. What is the best-case running time of linear search? Of binary search?
-3. Why is binary search incorrect if the array is not sorted?
-4. Trace binary search for `68` in a sorted array of your choice, writing the interval after each comparison.
-
-## Source priority
-
-The core definitions, examples, and presentation in these notes follow the supplied IIT Bombay lecture material. The distinctions between algorithms and programs, the half-open interval explanation, and the implementation cautions are supplementary clarifications added to make the notes self-contained.
+For example, when $n = 1\,048\,575 = 2^{20} - 1$:
+- Linear search requires over $1\,000\,000$ iterations.
+- Binary search requires only $k = 20$ comparisons.
