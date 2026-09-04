@@ -140,16 +140,30 @@ Rules:
 - Number lines (`1:`, `2:`, …) only if the prose or complexity analysis needs to point at specific lines; otherwise leave unnumbered.
 - If a runnable reference implementation is also wanted (relevant for CS293's lab component), put it in a *separate* fenced block with the real language tag, labeled "Reference implementation," never merged with the pseudocode block.
 
-## Diagrams
+## Diagrams vs. Tables
 
-For tree rotations, graph traversal order, or state machines (KMP failure function, trie structure), use a fenced ` ```mermaid ` block:
+**Core Rule:** **Do NOT use block diagrams or flowcharts where Markdown tables are sufficient to show differences, relationships, taxonomies, or feature comparisons.** Tables are cleaner, more readable, more compact, and eliminate rendering/parsing errors.
+
+- **Use Tables for:**
+  - Categorization and taxonomies (e.g., container types, memory segments, storage durations, pointer types).
+  - Feature-by-feature comparisons (e.g., `std::array` vs. `std::vector`, `at()` vs. `operator[]`, pointers vs. references).
+  - Complexity matrices (best/worst/average time and space).
+  - Scenario-based decision guides and trade-offs.
+
+- **Reserve Diagrams strictly for:**
+  - Dynamic algorithmic control flow and branching that cannot be tabularized (e.g., execution loops, state transitions).
+  - Tree transformations and rebalancing (e.g., AVL/Red-Black tree rotations).
+  - State machines (e.g., KMP failure function, finite automata).
+  - Memory physical layout and hardware pointer graphs (where spatial layout is essential).
+
+When diagrams are used, keep them minimal and use fenced ` ```mermaid ` blocks:
 
 ```mermaid
 flowchart TD
     A[Insert z as red leaf] --> B{z.parent is RED?}
-    B -- yes --> C[Fixup: recolor / rotate]
+    B -->|Yes| C[Fixup: recolor / rotate]
     C --> B
-    B -- no --> D[Done]
+    B -->|No| D[Done]
 ```
 
 For a single small tree/array/linked-list snapshot (e.g. one step of a BST or heap trace), a small fixed-width ASCII diagram in a fenced ` ```text ` block is clearer than Mermaid and is the better default for worked examples. Avoid Mermaid for graphs with more than ~15 nodes (BFS/DFS/MST examples included) — use an adjacency-list table plus a short trace table instead.

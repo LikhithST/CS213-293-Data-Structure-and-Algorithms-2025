@@ -11,19 +11,15 @@ In this module, we cover:
 4. **Circular References & Memory Leaks:** Resolving cyclic ownership graphs using `weak_ptr`.
 5. **Modern C++ Memory Ownership Guidelines:** Practical decision rules for assigning ownership in data structures.
 
-```mermaid
-flowchart TD
-    Memory["C++ Memory Handles"] --> Raw["Raw Handles\n(Non-Owning / Low-Level)"]
-    Memory --> Smart["Smart Pointers (<memory>)\n(RAII Automatic Lifetime)"]
+### Summary Taxonomy of C++ Memory Handles
 
-    Raw --> Ptr["Pointers (T*)\n- Rebindable\n- Can be nullptr"]
-    Raw --> Ref["References (T&)\n- Immutable alias\n- Non-null"]
-
-    Smart --> Unique["std::unique_ptr<T>\n- Exclusive ownership\n- Zero overhead\n- Move-only"]
-    Smart --> Shared["std::shared_ptr<T>\n- Shared ownership\n- Reference counted"]
-    Smart --> Weak["std::weak_ptr<T>\n- Non-owning observer\n- Breaks cycles"]
-    Smart --> Auto["std::auto_ptr<T>\n- Deprecated/Removed\n- Destructive copy"]
-```
+| Category | Type | Ownership Model | Rebindable? | Nullable? | Lifecycle Management |
+|---|---|---|:---:|:---:|---|
+| **Raw Pointer** | `T*` | Non-owning / Observer | Yes | Yes (`nullptr`) | Manual (`new`/`delete` or stack address) |
+| **Reference** | `T&` | Non-owning alias | No | No | Tied to aliased object's lifetime |
+| **Unique Smart Pointer** | `std::unique_ptr<T>` | Exclusive ownership | Yes (via move) | Yes | Automatic destruction upon scope exit |
+| **Shared Smart Pointer** | `std::shared_ptr<T>` | Shared ownership | Yes | Yes | Automatic destruction when reference count $= 0$ |
+| **Weak Smart Pointer** | `std::weak_ptr<T>` | Non-owning observer | Yes | Yes | Breaks circular dependencies; requires `.lock()` |
 
 ---
 
@@ -83,33 +79,32 @@ int main() {
 
 ---
 
-### Dangerous Pointer States
+### Pointer States & Safety
 
-```mermaid
-flowchart LR
-    A["Wild Pointer\n(Uninitialized)"] -->|Dereference| Crash1["Segmentation Fault / Corrupted State"]
-    B["Dangling Pointer\n(Points to Deallocated Memory)"] -->|Dereference| Crash2["Undefined Behavior / Security Bug"]
-    C["nullptr\n(Explicit 0 Address)"] -->|Check if != nullptr| Safe["Safe Execution"]
+| Pointer State | Definition / Origin | Risk Level | Behavior on Dereference | Safe Practice |
+|---|---|:---:|---|---|
+| **`nullptr`** | Explicit zero address initialization | **Safe** | Predictable crash / caught by `if (p != nullptr)` | Always initialize unused pointers to `nullptr` |
+| **Wild Pointer** | Uninitialized pointer containing garbage bits | **Critical** | Undefined behavior / random memory corruption | Never declare pointers without immediate assignment |
+| **Dangling Pointer** | Points to deallocated or out-of-scope memory | **Critical** | Use-after-free vulnerability / segmentation fault | Clear pointers to `nullptr` after `delete`; use smart pointers |
+
+#### Examples of Pointer Pitfalls
+
+```cpp
+// 1. nullptr (Safe if checked):
+int* ptr = nullptr;
+if (ptr != nullptr) {
+    *ptr = 10;
+}
+
+// 2. Wild pointer (DANGEROUS):
+int* wild; // Holds random bits -> *wild = 10 causes undefined behavior!
+
+// 3. Dangling pointer (DANGEROUS):
+int* getDanglingPointer() {
+    int localVal = 42;
+    return &localVal; // BUG: localVal destroyed when function returns!
+}
 ```
-
-1. **`nullptr` (Safe Null State):**
-   Introduced in C++11, `nullptr` provides a type-safe literal representing address zero. Always initialize unused pointers to `nullptr`:
-   ```cpp
-   int* ptr = nullptr;
-   if (ptr != nullptr) {
-       *ptr = 10;
-   }
-   ```
-2. **Wild (Uninitialized) Pointers:**
-   Declaring `int* p;` without assignment leaves `p` holding random bit patterns. Dereferencing it causes undefined behavior or segmentation faults (`SIGSEGV`).
-3. **Dangling Pointers:**
-   A pointer that references memory that has been deallocated or went out of scope:
-   ```cpp
-   int* getDanglingPointer() {
-       int localVal = 42;
-       return &localVal; // BUG: localVal is destroyed when function returns!
-   }
-   ```
 
 ---
 
@@ -166,16 +161,6 @@ In standard C++, there is no background garbage collection thread. Instead, C++ 
 
 Smart pointers, defined in `<memory>`, wrap raw pointers and manage heap memory deterministically.
 
-```mermaid
-flowchart TD
-    subgraph RAII_Cycle["RAII Object Lifetime"]
-        Construct["Smart Pointer Created on Stack"] --> Allocate["Allocates Resource on Heap (new)"]
-        Allocate --> Scope["Execution inside Scope"]
-        Scope --> Exit["Smart Pointer leaves Scope"]
-        Exit --> Destruct["Destructor automatically calls delete"]
-    end
-```
-
 ---
 
 ### 1. `std::unique_ptr` (Exclusive Ownership)
@@ -224,11 +209,10 @@ int main() {
 - **Deallocation Rule:** The underlying object is deleted when `use_count` reaches **$0$**.
 - **Factory Function:** `std::make_shared<T>(...)` (allocates object and control block in a single contiguous memory chunk).
 
-```mermaid
-flowchart LR
-    p1["shared_ptr p1"] --> CB["Control Block\nuse_count = 2\nweak_count = 0"]
-    p2["shared_ptr p2"] --> CB
-    CB --> Obj["Heap Object: int(100)"]
+```text
+       shared_ptr p1 ----\
+                          +---> [ Control Block: use_count = 2, weak_count = 0 ] ---> [ int: 100 ]
+       shared_ptr p2 ----/
 ```
 
 ```cpp
@@ -295,20 +279,16 @@ int main() {
 
 When two objects hold `std::shared_ptr` references to each other, a **cyclic reference** is formed. Neither object's `use_count` can ever reach $0$, producing a permanent memory leak.
 
-```mermaid
-flowchart LR
-    subgraph Cycle["Circular Dependency Leak (shared_ptr)"]
-        NodeA1["Node A\n(use_count = 1)"] -->|shared_ptr| NodeB1["Node B\n(use_count = 1)"]
-        NodeB1 -->|shared_ptr| NodeA1
-    end
-```
+```text
+Circular Leak:
+[ Node A (use_count=1) ] === shared_ptr ===> [ Node B (use_count=1) ]
+[ Node A (use_count=1) ] <=== shared_ptr === [ Node B (use_count=1) ]
+(Neither count reaches 0 -> Memory Leak!)
 
-```mermaid
-flowchart LR
-    subgraph Fixed["Cycle Broken (weak_ptr)"]
-        NodeA2["Node A\n(use_count = 1)"] -->|shared_ptr| NodeB2["Node B\n(use_count = 1)"]
-        NodeB2 -.->|weak_ptr (count=0)| NodeA2
-    end
+Cycle Broken with weak_ptr:
+[ Node A (use_count=1) ] === shared_ptr ===> [ Node B (use_count=1) ]
+[ Node A (use_count=1) ] <... weak_ptr ..... [ Node B (use_count=1) ]
+(weak_ptr does not increment count -> Clean Destruction!)
 ```
 
 ```cpp
@@ -379,4 +359,3 @@ std::auto_ptr<int> p2 = p1; // DANGEROUS: p1 silently became nullptr!
 3. **Break Cycles with `std::weak_ptr`:** In graph, tree-parent, or observer patterns, use `std::weak_ptr` for back-references to prevent cyclic memory leaks.
 4. **Use Raw Pointers/References for Non-Owning Parameters:** When passing objects into functions that only inspect or use data without affecting object lifetime, pass by `const T&` or raw non-owning `T*`.
 5. **Never Use `auto_ptr` or Raw `new`/`delete`:** Rely on `std::make_unique` and `std::make_shared` to eliminate explicit `new`/`delete` calls.
-

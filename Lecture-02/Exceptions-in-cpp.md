@@ -13,19 +13,15 @@ This module covers:
 4. **Container Exception Behavior:** Boundary checks and safety guarantees.
 5. **Exercise 2.5 (.at() vs. operator[]):** Detailed architectural comparison of key lookups in `std::map`.
 
-```mermaid
-flowchart TD
-    Start["Normal Execution"] --> TryBlock["Enter try { ... } block"]
-    TryBlock --> Op["Execute Operations"]
-    Op --> Check{"Unexpected Event / Error?"}
-    Check -- No --> ExitTry["Continue Normal Execution"]
-    Check -- Yes --> Throw["throw exception_object;"]
-    Throw --> Unwind["Stack Unwinding (Destroy Local Objects)"]
-    Unwind --> CatchMatch{"Catch block matches type?"}
-    CatchMatch -- Yes --> Handler["Execute catch (Type& e) Handler"]
-    Handler --> Resume["Resume Execution after try-catch"]
-    CatchMatch -- No (Unhandled) --> Terminate["std::terminate() / Program Abort"]
-```
+### Exception Control Flow Summary
+
+| Phase | Keyword / Mechanism | Action Performed by Runtime |
+|---|---|---|
+| **1. Protected Block** | `try { ... }` | Designates a block of code monitored for exceptional conditions |
+| **2. Fault Detection** | `throw expr;` | Halts normal execution, constructs exception object, initiates stack unwinding |
+| **3. Stack Unwinding** | Automatic Destructors | Destroys local variables in reverse order of creation up the call stack |
+| **4. Type Matching** | `catch (Type& e)` | Catches and handles the exception if the thrown object matches `Type` |
+| **5. Unhandled Failure** | `std::terminate()` | Aborts the process immediately if no matching catch block is found |
 
 ---
 
@@ -37,19 +33,14 @@ During program execution, various external or logical failures can occur:
 - **Memory Failures:** Heap exhaustion during dynamic allocation (`std::bad_alloc`).
 - **Container Boundary Violations:** Accessing missing keys or invalid indices (`std::out_of_range`).
 
-```mermaid
-flowchart LR
-    subgraph ErrorApproaches["Error Handling Strategies"]
-        direction TB
-        Traditional["1. Return Codes (e.g., return -1, NULL)\n- Easy to ignore\n- Clutters return types\n- Requires checking every function call"]
-        Exceptions["2. Exception Handling (try-throw-catch)\n- Cannot be silently ignored\n- Separates error handling from business logic\n- Automatically unwinds stack across deep calls"]
-    end
-```
+### Error Handling Strategies: Return Codes vs. Exceptions
 
-### Why Use Exceptions Instead of Error Codes?
-1. **Separation of Concerns:** Business logic remains clean and readable without `if (err != 0)` checks after every single operation.
-2. **Unignorable Failures:** If an error code is returned, client code can accidentally ignore it and proceed with corrupted state. Exceptions enforce immediate handling or terminate execution safely.
-3. **Multi-Level Stack Propagation:** Exceptions automatically propagate up the call stack to the appropriate high-level handler without requiring intermediate functions to pass error flags manually.
+| Dimension | Return Codes (C-Style) | Exceptions (Modern C++) |
+|---|---|---|
+| **Detection Obligation** | Optional (Easily ignored by caller) | **Mandatory** (Unhandled errors terminate program) |
+| **Code Cleanliness** | Clutters return values and requires `if (err)` checks | Separates normal business logic from error handling |
+| **Call Stack Traversal** | Every intermediate function must manually propagate error codes | **Automatic Stack Unwinding** directly to the relevant handler |
+| **Constructor Failures** | Cannot return values from constructors | The **only** way to signal failure during object initialization |
 
 ---
 
@@ -306,4 +297,3 @@ int main() {
    - Use `map[key]` only when you explicitly intend to insert or overwrite.
    - Use `map.at(key)` when a missing key represents an exceptional error.
    - Use `map.find(key)` or `map.contains(key)` for non-throwing, non-mutating checks.
-

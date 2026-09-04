@@ -7,13 +7,6 @@ In C++, both `std::array` and `std::vector` provide contiguous memory storage fo
 - **`std::array`:** A thin, zero-overhead wrapper over a fixed-size, stack-allocated C-style array whose size is fixed at compile time.
 - **`std::vector`:** A dynamically resizable array that manages a contiguous memory buffer on the heap.
 
-```mermaid
-flowchart TD
-    Choice{"Is the collection size known at compile time and fixed?"}
-    Choice -- Yes (Small, fixed size) --> Array["std::array<T, N>\n- Stack allocated\n- Zero heap overhead\n- Maximum cache locality"]
-    Choice -- No (Variable size or very large) --> Vector["std::vector<T>\n- Heap allocated\n- Dynamic resizing\n- Protected against stack overflow"]
-```
-
 ---
 
 ## 1. Core Technical Differences

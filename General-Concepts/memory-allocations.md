@@ -9,16 +9,6 @@ This guide provides a comprehensive breakdown of:
 2. **Virtual Memory Layout of a Process:** The Text, Initialized Data, BSS, Heap, and Stack segments.
 3. **Hardware Execution & Allocation Costs:** How stack pointers, heap allocators, and memory segments interact at the machine level.
 
-```mermaid
-flowchart TD
-    subgraph StorageDurations["C++ Storage Durations"]
-        Auto["1. Automatic\n(Stack, Scope-Bound)"]
-        Dyn["2. Dynamic\n(Heap, Explicit / RAII)"]
-        Stat["3. Static\n(Data/BSS, Program Lifetime)"]
-        TLS["4. Thread-Local\n(TLS, Thread Lifetime)"]
-    end
-```
-
 ---
 
 ## 1. The Four Storage Durations in C++
@@ -117,29 +107,6 @@ thread_local int thread_specific_id = 0;
 When an operating system executes a compiled C++ binary, it assigns the program an isolated, contiguous **virtual address space**. This address space is organized into standardized segments.
 
 ![Memory Layout of C/C++ Program](../Images/Memory-Layout-of-C-program.png)
-
-```mermaid
-flowchart TD
-    subgraph VirtualMemory["Virtual Memory Space (0x0000... to 0xFFFF...)"]
-        direction TB
-        High["High Memory Addresses (e.g., 0x7FFF...)"]
-        Stack["Stack (Grows Downward ↓)"]
-        Gap["Unmapped Virtual Address Space (Growth Room)"]
-        Heap["Heap (Grows Upward ↑)"]
-        BSS["BSS Segment (Uninitialized Globals / Statics)"]
-        Data["Data Segment (Initialized Globals / Statics)"]
-        Text["Text Segment (.text - Machine Code & Literals)"]
-        Low["Lowest Memory Addresses (0x0000...)"]
-
-        High --- Stack
-        Stack --- Gap
-        Gap --- Heap
-        Heap --- BSS
-        BSS --- Data
-        Data --- Text
-        Text --- Low
-    end
-```
 
 ---
 

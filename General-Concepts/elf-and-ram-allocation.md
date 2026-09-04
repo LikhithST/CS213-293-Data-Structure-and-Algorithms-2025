@@ -10,33 +10,7 @@ This guide explains:
 3. **Lazy Allocation of the BSS Segment:** The Zero-Page optimization and on-demand Copy-on-Write page faults.
 4. **Binary Inspection Tools:** Using `readelf`, `size`, and `objdump` to examine compiled binaries.
 
-```mermaid
-flowchart LR
-    ELF["Compiled ELF Binary on Disk\n(.text, .rodata, .data, .bss metadata)"] -->|OS Execve Loader| Process["Runtime Virtual Address Space in RAM\n(Text, Data, BSS, Heap, Stack)"]
-    Process -->|MMU & Page Tables| PhysicalRAM["Physical RAM Frames"]
-```
-
----
-
-## 1. What is Stored on Disk vs. What Exists Only in RAM
-
 An ELF binary contains the **blueprint** and **static data** of a program, but dynamic runtime structures exist only in RAM during process execution.
-
-```mermaid
-flowchart TD
-    subgraph Disk["Stored in .elf on Disk"]
-        Text[".text (Compiled Machine Instructions)"]
-        Rodata[".rodata (Read-Only Literals)"]
-        Data[".data (Initialized Non-Zero Globals)"]
-        BSSMeta[".bss Metadata (Byte Size Requirement Only)"]
-        Headers["ELF Headers & Program Header Table"]
-    end
-
-    subgraph RAMOnly["Created at Runtime in RAM"]
-        Heap["The Heap (Dynamically allocated via brk/mmap)"]
-        Stack["The Stack (Initialized by OS kernel on launch)"]
-    end
-```
 
 ### 1. Stored in the `.elf` File on Disk
 
@@ -99,35 +73,14 @@ User-space applications **never interact with physical RAM addresses directly**.
 
 ---
 
-### How Virtual Memory Works
+### Virtual to Physical Address Mapping
 
-```mermaid
-flowchart LR
-    subgraph Virtual["Program's View (Virtual Memory)"]
-        direction TB
-        VStack["Stack (0x7FFF...)"]
-        VHeap["Heap (0x0120...)"]
-        VData["Data / BSS (0x0060...)"]
-        VText["Text (0x0040...)"]
-    end
-
-    subgraph MMU_Unit["Translation"]
-        MMU["CPU Memory Management Unit (MMU)\n+ OS Page Tables"]
-    end
-
-    subgraph Physical["Physical RAM (4 KB Frames)"]
-        direction TB
-        F12["Frame 12 (Stack Data)"]
-        F4["Frame 4 (Heap Data)"]
-        F89["Frame 89 (Global Data)"]
-        F2["Frame 2 (Machine Code)"]
-    end
-
-    VStack --> MMU --> F12
-    VHeap --> MMU --> F4
-    VData --> MMU --> F89
-    VText --> MMU --> F2
-```
+| Virtual Memory Region | Example Virtual Address | Translation Mechanism | Mapped Physical RAM Frame |
+|---|---|---|---|
+| **Stack** | `0x7FFF...` | MMU + Page Table Entry | Physical Frame 12 (Dynamic stack frame) |
+| **Heap** | `0x0120...` | MMU + Page Table Entry | Physical Frame 4 (Dynamic allocations) |
+| **Data / BSS** | `0x0060...` | MMU + Page Table Entry | Physical Frame 89 (Global/Static variables) |
+| **Text** | `0x0040...` | MMU + Page Table Entry | Physical Frame 2 (Compiled machine code) |
 
 - **Pages and Frames:** Virtual memory is divided into fixed-size chunks called **pages** (typically $4\text{ KB}$), while physical RAM is divided into matching **frames**.
 - **Page Tables:** The OS maintains a multi-level lookup table mapping virtual pages to physical frames.
