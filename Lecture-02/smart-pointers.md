@@ -109,7 +109,7 @@ int* getDanglingPointer() {
 ---
 
 ### Pointers and Arrays
-In C++, an array name automatically decays into a pointer pointing to its initial element ($A \equiv \&A[0]$). Pointer arithmetic advances addresses by multiples of `sizeof(T)`:
+In C++, an array name automatically decays into a pointer pointing to its initial element (`A` $\equiv$ `&A[0]`). Pointer arithmetic advances addresses by multiples of `sizeof(T)`:
 
 $$*(p + i) \equiv p[i]$$
 
