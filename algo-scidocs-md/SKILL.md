@@ -82,14 +82,25 @@ T(n) &= 2T(n/2) + n \\
 $$
 ```
 
+### KaTeX / Math Mode Pitfalls & Formatting Rules
+
+- **Never use `&` or `\&` inside LaTeX math mode for C++ code**: Inside KaTeX math mode (`$...$` or `$$...$$`), bare `&` and `\&` cause parsing errors because `&` is reserved strictly as a table/matrix alignment delimiter. Never write `$A \equiv \&A[0]$` or `$p = \&x$`.
+  - *Correct pattern for C++ syntax relationships*: Mix inline code backticks with math symbols: ``(`A` $\equiv$ `&A[0]`)``, or standard mathematical notation ``$$*(p + i) \equiv p[i]$$``.
+- **Always brace multi-character superscripts and subscripts**: Write `$2^{n-1}$`, `$T_{\text{worst}}$`, `$h_{i+1}(k)$` instead of `$2^n-1$`, `$T_worst$`, `$h_i+1(k)$`.
+- **Use standard LaTeX operators**: Use `\log`, `\lg`, `\ln`, `\bmod`, `\min`, `\max`, `\le`, `\ge`, `\equiv` instead of plain text words or ASCII symbols.
+- **Literal Dollar Signs**: Always escape literal `$` signs in prose (e.g., `\$100`) to avoid inadvertently triggering math mode.
+
 ### Self-check before shipping any note
 
+- Ampersands or C++ code symbols inside math mode (e.g. `$\&A[0]$` -> change to ``(`A` $\equiv$ `&A[0]`)``)
 - Unbraced multi-character exponents/subscripts (`2^n-1` instead of `2^{n-1}`)
 - `log`/`mod`/`min`/`max` typed as plain text inside math mode instead of `\log`/`\bmod`/`\min`/`\max`
 - Plain brackets where floor/ceiling was meant (tree-height and heap-array-index formulas are the usual offenders)
 - Mixed notation styles (LaTeX in one section, bare `n^2` in another) — pick one for the whole note
 - A claimed complexity bound with no derivation or citation to the algorithm's known analysis
 - An algorithm described only in prose with no pseudocode block — not acceptable for this course's notes
+- Flowcharts/diagrams used where a Markdown comparison or taxonomy table is sufficient
+- Mermaid code block syntax errors or Markdown text/headings accidentally leaking inside ` ```mermaid ` fences
 
 ## Document structure for a topic note
 
@@ -165,6 +176,12 @@ flowchart TD
     C --> B
     B -->|No| D[Done]
 ```
+
+### Mermaid Diagram Rules & Syntax Safety
+- **Never intersperse Markdown inside code blocks**: Always ensure closing triple backticks (`` ``` ``) properly terminate the Mermaid block before starting Markdown headings (`### ...`), tables, or prose. Markdown leaking inside Mermaid triggers fatal lexer parse errors (`Expecting 'SEMI', 'NEWLINE', 'EOF', got 'NODE_STRING'`).
+- **Do not use unquoted brackets in edge labels**: Edge labels with square brackets like `-->|cart['hat']|` break the Mermaid lexer because `[` designates node shapes. Write `-->|Using operator[]|` or quote the text (`-->|"cart['hat']"|`).
+- **Escape angle brackets**: Do not use raw `<T>` or `<memory>` inside node text; use `&lt;T&gt;`, `(type T)`, or `(memory header)`.
+- **Avoid double colons in labels**: Avoid C++ `::` scope operators in class diagram relationship labels.
 
 For a single small tree/array/linked-list snapshot (e.g. one step of a BST or heap trace), a small fixed-width ASCII diagram in a fenced ` ```text ` block is clearer than Mermaid and is the better default for worked examples. Avoid Mermaid for graphs with more than ~15 nodes (BFS/DFS/MST examples included) — use an adjacency-list table plus a short trace table instead.
 
