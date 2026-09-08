@@ -24,7 +24,7 @@ flowchart TD
     Unwind --> CatchMatch{"Catch block matches type?"}
     CatchMatch -->|Yes| Handler["Execute catch (Type& e) Handler"]
     Handler --> Resume["Resume Execution after try-catch"]
-    CatchMatch -->|No (Unhandled)| Terminate["std::terminate() / Program Abort"]
+    CatchMatch -->|"No (Unhandled)"| Terminate["std::terminate() / Program Abort"]
 ```
 ### Exception Control Flow Summary
 

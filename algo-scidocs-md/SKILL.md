@@ -203,7 +203,7 @@ flowchart TD
 
 ### Mermaid Diagram Rules & Syntax Safety
 - **Never intersperse Markdown inside code blocks**: Always ensure closing triple backticks (`` ``` ``) properly terminate the Mermaid block before starting Markdown headings (`### ...`), tables, or prose. Markdown leaking inside Mermaid triggers fatal lexer parse errors (`Expecting 'SEMI', 'NEWLINE', 'EOF', got 'NODE_STRING'`).
-- **Do not use unquoted brackets in edge labels**: Edge labels with square brackets like `-->|cart['hat']|` break the Mermaid lexer because `[` designates node shapes. Write `-->|Using operator[]|` or quote the text (`-->|"cart['hat']"|`).
+- **Quote all edge labels containing special characters**: In flowchart edge labels (`-->|...|`), any text containing parentheses `()`, brackets `[]`, braces `{}`, commas, colons, or semicolons MUST be enclosed in double quotes (e.g., `-->|"No (Unhandled)"|`, `-->|"Using operator[]"|`, `-->|"Using .at()"|`). Unquoted parentheses cause the lexer error `got 'PS'` (Parenthesis Start), and unquoted brackets cause shape delimiter collisions.
 - **Escape angle brackets**: Do not use raw `<T>` or `<memory>` inside node text; use `&lt;T&gt;`, `(type T)`, or `(memory header)`.
 - **Avoid double colons in labels**: Avoid C++ `::` scope operators in class diagram relationship labels.
 

@@ -254,9 +254,9 @@ flowchart TD
     Query["Lookup key 'hat'"] --> Check{"Key exists in map?"}
     Check -->|Yes| ReturnVal["Return reference to existing value"]
     Check -->|No| Op{"Which access method?"}
-    Op -->|Using operator[]| DefaultInsert["Default-construct Value 0, insert into map, return reference"]
-    Op -->|Using .at()| ThrowEx["Throw std::out_of_range exception"]
-    Op -->|Using .find()| RetEnd["Return cart.end() iterator (Read-only, no mutation)"]
+    Op -->|"Using operator[]"| DefaultInsert["Default-construct Value 0, insert into map, return reference"]
+    Op -->|"Using .at()"| ThrowEx["Throw std::out_of_range exception"]
+    Op -->|"Using .find()"| RetEnd["Return cart.end() iterator (Read-only, no mutation)"]
 ```
 
 ### Map Lookup Method Behavior Comparison
