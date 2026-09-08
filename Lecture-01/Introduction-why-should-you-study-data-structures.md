@@ -103,7 +103,7 @@ Since $S$ points to the start of the array, $S + i$ calculates the memory addres
 
 When $e \notin S$, the search fails and the loop completes all $n$ iterations before returning $-1$.
 
-![From C++ source to instruction set](Images/cpp-to-instruction-set.png)
+![From C++ source to instruction set](../Images/cpp-to-instruction-set.png)
 
 We categorize the execution costs into four types of machine-level operations:
 - $T_{\text{Read}}$: Cost of a memory access ($S[i]$).
@@ -171,7 +171,7 @@ Let us search for $68$ in a sorted array:
 4. We have **halved our search space** in a single comparison.
 5. We recursively repeat this process, halving the search space at each step.
 
-![Binary search](Images/binary-search.png)
+![Binary search](../Images/binary-search.png)
 
 ---
 
