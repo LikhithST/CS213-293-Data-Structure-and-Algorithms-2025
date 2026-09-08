@@ -46,14 +46,6 @@ During program execution, various external or logical failures can occur:
 - **Memory Failures:** Heap exhaustion during dynamic allocation (`std::bad_alloc`).
 - **Container Boundary Violations:** Accessing missing keys or invalid indices (`std::out_of_range`).
 
-```mermaid
-flowchart LR
-    subgraph ErrorApproaches["Error Handling Strategies"]
-        direction TB
-        Traditional["1. Return Codes (e.g., return -1, NULL)\n- Easy to ignore\n- Clutters return types\n- Requires checking every function call"]
-        Exceptions["2. Exception Handling (try-throw-catch)\n- Cannot be silently ignored\n- Separates error handling from business logic\n- Automatically unwinds stack across deep calls"]
-    end
-```
 ### Error Handling Strategies: Return Codes vs. Exceptions
 
 ### Why Use Exceptions Instead of Error Codes?

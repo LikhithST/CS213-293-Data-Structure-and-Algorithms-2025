@@ -2,7 +2,7 @@
 
 ## Overview
 
-Containers are data structures provided by the C++ Standard Template Library (STL) to store, organize, and manage collections of objects with automatic memory management. 
+Containers are data structures provided by the C++ Standard Template Library (STL) to store, organize, and manage collections of objects with automatic memory management.
 
 In this module, we explore:
 1. **The Four STL Container Categories:** Sequence containers, associative containers, unordered containers, and container adapters.
@@ -11,19 +11,8 @@ In this module, we explore:
 4. **Behavioral Subtleties in STL:** Map subscripting side-effects (`operator[]` vs. `.at()`).
 5. **Unified Interfaces & Generic Algorithms:** Standardized iterator abstractions enabling decoupled, reusable algorithms.
 
-```mermaid
-flowchart TD
-    STL["C++ STL Containers"] --> Seq["Sequence Containers\n(Linear, Position-Based)"]
-    STL --> Assoc["Associative Containers\n(Ordered, Balanced Trees)"]
-    STL --> Unordered["Unordered Associative\n(Hash Tables)"]
-    STL --> Adapters["Container Adapters\n(Interface Wrappers)"]
 ### Summary Taxonomy of STL Containers
 
-    Seq --> V["vector, array, deque, list, forward_list"]
-    Assoc --> S["set, multiset, map, multimap"]
-    Unordered --> US["unordered_set, unordered_map, ..."]
-    Adapters --> A["stack, queue, priority_queue"]
-```
 | Family | Organizational Principle | Key Characteristics | Standard Library Containers |
 |---|---|---|---|
 | **Sequence Containers** | Linear, position-based | Preserves insertion order; direct positional access | `std::vector`, `std::array`, `std::deque`, `std::list`, `std::forward_list` |
@@ -134,16 +123,8 @@ int main() {
 
 Container selection is governed by access patterns, memory constraints, and frequency of mutations.
 
-```mermaid
-flowchart TD
-    Start{"What is your primary requirement?"}
-    Start -->|Key-Value Mapping| KV{"Order needed?"}
-    Start -->|Linear Sequence| Seq{"Where do you insert/delete?"}
-    Start -->|Unique Key Set| USet{"Sorted order required?"}
 ### Container Decision Matrix
 
-    KV -->|Yes| Map["std::map (O(log n))"]
-    KV -->|No| UMap["std::unordered_map (O(1) avg)"]
 | Primary Requirement | Sub-Condition | Best Container Choice | Rationale |
 |---|---|---|---|
 | **Linear Sequence** | Frequent index lookups & back appends | `std::vector` | Contiguous memory, cache locality |
@@ -156,14 +137,7 @@ flowchart TD
 | **Protocol Queue** | Strict FIFO arrival order | `std::queue` | Encapsulated front/back access |
 | **Priority Queue** | Dynamic largest/highest element access | `std::priority_queue` | Binary Heap ($O(\log n)$ push/pop) |
 
-    USet -->|Yes| Set["std::set (O(log n))"]
-    USet -->|No| UnSet["std::unordered_set (O(1) avg)"]
 ---
-
-    Seq -->|Index Access & End Appends| Vec["std::vector (Cache friendly)"]
-    Seq -->|Push/Pop Both Ends| Deq["std::deque"]
-    Seq -->|Splice/Insert Anywhere| Lst["std::list"]
-```
 
 ### Technical Decision Factors
 
@@ -204,25 +178,6 @@ flowchart TD
 
 An **Abstract Data Type (ADT)** is a mathematical model for data structures where behavior is defined by its **interface and operational guarantees (axioms)** rather than its concrete physical implementation.
 
-```mermaid
-classDiagram
-    class SetADT {
-        <<interface>>
-        +insert(v)
-        +erase(v)
-        +contains(v) bool
-    }
-    class RedBlackTreeSet {
-        -root: NodePointer
-        -rebalance()
-    }
-    class HashTableSet {
-        -buckets: BucketList
-        -hashFunction()
-    }
-    SetADT <|.. RedBlackTreeSet : std_set
-    SetADT <|.. HashTableSet : std_unordered_set
-```
 ### ADT Interface vs. Implementations
 
 | Abstract Data Type | Core Abstract Operations | STL Realization | Physical Implementation |
@@ -303,6 +258,7 @@ flowchart TD
     Op -->|Using .at()| ThrowEx["Throw std::out_of_range exception"]
     Op -->|Using .find()| RetEnd["Return cart.end() iterator (Read-only, no mutation)"]
 ```
+
 ### Map Lookup Method Behavior Comparison
 
 | Lookup Expression | Key Exists? | Action Performed | Return Value | Container Mutated? |
@@ -322,21 +278,8 @@ One of the defining design philosophies of the C++ Standard Template Library is 
 
 Even though `std::vector`, `std::list`, `std::set`, and `std::deque` maintain entirely different physical memory structures, they share identical method signatures, type definitions, and traversal semantics.
 
-```mermaid
-flowchart LR
-    subgraph Client["Client Code / Generic Algorithms"]
-        Algo["std::find(c.begin(), c.end(), value)"]
-    end
-    Client -->|Iterators| V["std::vector"]
-    Client -->|Iterators| L["std::list"]
-    Client -->|Iterators| S["std::set"]
-    Client -->|Iterators| D["std::deque"]
-```
-### Standardized API Vocabulary
-
 ### 1. Standardized API Vocabulary
 
-| Category | Member Function / Type | Universal Behavior |
 | Category | Member Function / Type | Universal Behavior Across Containers |
 |---|---|---|
 | **Capacity** | `.size()`, `.empty()`, `.max_size()` | Inspect container volume and emptiness |
@@ -358,7 +301,6 @@ bool e3 = s.empty();
 ---
 
 ### 2. Decoupling Algorithms via Iterators
-### Decoupling Algorithms via Iterators
 
 Because of unified interfaces, algorithms in `<algorithm>` are implemented as templates parameterized over iterator categories rather than specific containers:
 
@@ -386,7 +328,6 @@ int main() {
 ---
 
 ### 3. Ease of Refactoring (Container Swapping)
-### Ease of Refactoring (Container Swapping)
 
 Unified interfaces allow developers to change the underlying container backend via `using` type aliases without altering business logic:
 
@@ -412,4 +353,3 @@ for (auto it = items.begin(); it != items.end(); ++it) {
 2. **ADTs Encapsulate Invariants:** Abstract data types define formal contracts and axioms ($u \ne v$ independence), allowing underlying implementations to change freely.
 3. **Be Aware of Map Mutation:** `operator[]` inserts default values upon missing key access. Use `.find()` or `.contains()` for non-mutating lookups, and `.at()` when missing keys represent errors.
 4. **Leverage Unified Interfaces:** Write generic client code using iterator ranges (`.begin()`, `.end()`) and STL algorithms to ensure maintainability and seamless refactoring.
-
