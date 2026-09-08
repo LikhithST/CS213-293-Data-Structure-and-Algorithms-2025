@@ -166,7 +166,7 @@ In unary notation, a number of value $N$ is encoded as a sequence of $N$ identic
 
 #### Breakdown by Computational Model:
 1. **Array / String Concatenation:** Concatenating string $1^a$ with string $1^b$ requires copying $a + b = N$ symbols, taking $\Theta(N)$ time.
-2. **Single-Tape Turing Machine:** To compute $1^a \# 1^b \to 1^{a+b}$, the read/write head scans the tape to find the separator `#`, replaces it with `1`, moves to the right end, and deletes the trailing `1`. The total head movements scale as $\Theta(a + b) = \Theta(N)$.
+2. **Single-Tape Turing Machine:** To compute $1^a$ `#` $1^b \to 1^{a+b}$, the read/write head scans the tape to find the separator `#`, replaces it with `1`, moves to the right end, and deletes the trailing `1`. The total head movements scale as $\Theta(a + b) = \Theta(N)$.
 3. **Linked-List Pointer Splice:** If unary numbers are stored as linked lists with known tail pointers, splicing list $B$ to the end of list $A$ takes $\Theta(1)$ pointer assignments. However, reading or allocating the inputs remains $\Theta(N)$.
 
 ---
