@@ -82,17 +82,41 @@ T(n) &= 2T(n/2) + n \\
 $$
 ```
 
-### KaTeX / Math Mode Pitfalls & Formatting Rules
+### Mathematical Expressions & Formal Representations Reference
 
-- **Never use `&` or `\&` inside LaTeX math mode for C++ code**: Inside KaTeX math mode (`$...$` or `$$...$$`), bare `&` and `\&` cause parsing errors because `&` is reserved strictly as a table/matrix alignment delimiter. Never write `$A \equiv \&A[0]$` or `$p = \&x$`.
-  - *Correct pattern for C++ syntax relationships*: Mix inline code backticks with math symbols: ``(`A` $\equiv$ `&A[0]`)``, or standard mathematical notation ``$$*(p + i) \equiv p[i]$$``.
-- **Always brace multi-character superscripts and subscripts**: Write `$2^{n-1}$`, `$T_{\text{worst}}$`, `$h_{i+1}(k)$` instead of `$2^n-1$`, `$T_worst$`, `$h_i+1(k)$`.
-- **Use standard LaTeX operators**: Use `\log`, `\lg`, `\ln`, `\bmod`, `\min`, `\max`, `\le`, `\ge`, `\equiv` instead of plain text words or ASCII symbols.
-- **Literal Dollar Signs**: Always escape literal `$` signs in prose (e.g., `\$100`) to avoid inadvertently triggering math mode.
+All mathematical expressions in Markdown notes are rendered via **KaTeX** (a subset of LaTeX math). For reference, follow the official [KaTeX Supported Functions Documentation](https://katex.org/docs/supported.html) and [LaTeX Mathematics Wiki](https://en.wikibooks.org/wiki/LaTeX/Mathematics).
+
+#### 1. Reserved Character Pitfalls in Math Mode
+TeX reserves special characters (`#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^`, `\`). Using them improperly inside `$...$` or `$$...$$` causes fatal parser crashes:
+
+| Reserved Symbol | TeX Role | Failure Mode in Math Mode | Safe Representation Strategy |
+|---|---|---|---|
+| **`#`** | Macro parameter token | Triggers `You can't use 'macro parameter character #' in math mode`. Markdown parsers also unescape `\#` before KaTeX runs. | **Keep string / tape tokens outside math mode** using backticks (e.g., `$1^a$` `#` `$1^b \to 1^{a+b}$` or `` `1^a # 1^b` $\to$ `1^(a+b)` ``) |
+| **`&`** | Matrix / table column delimiter | KaTeX expects an alignment environment (like `\begin{aligned}`); breaks on code expressions like `&A[0]`. | Mix code backticks with math: ``(`A` $\equiv$ `&A[0]`)`` |
+| **`$`** | Math mode delimiter | Unescaped `$` in prose turns all surrounding text into math mode. | Always escape literal currency/text dollar signs: `\$100` |
+| **`_` and `^`** | Subscript / Superscript | Unbraced tokens (e.g., `2^n-1`, `T_worst`) parse only the first character. | **Always brace multi-character tokens**: `$2^{n-1}$`, `$T_{\text{worst}}$`, `$h_{i+1}(k)$` |
+| **`%`** | Comment delimiter | Consumes the rest of the math line as a TeX comment. | Use `\%` or express modulo using `\bmod` (`k \bmod m`) |
+| **`~`** | Non-breaking space | Renders unexpected spacing or fails. | Use `\approx` (approximately equal), `\sim` (asymptotically similar), or `\Theta(\cdot)` |
+| **`\`** | Macro escape | Stray backslashes fail command lookup. | Use standard macro commands (`\le`, `\ge`, `\times`, `\dots`, `\setminus`) |
+
+#### 2. Representing Non-Numeric Models (Strings, Machines, Code)
+- **Turing Machine Tapes & String Alphabets:** Do NOT force string separators, delimiters, or alphabet symbols into raw math mode. Use inline code or hybrid formatting:
+  - *Correct:* To compute $1^a$ `#` $1^b \to 1^{a+b}$ on tape...
+  - *Correct:* String transition: `` `111#11` -> `11111` ``
+  - *Incorrect:* `$1^a # 1^b \to 1^{a+b}$` (triggers macro parameter crash)
+- **C++ Code Expressions:** Always use backticks for identifiers and syntax operators:
+  - *Correct:* Array decay: ``(`A` $\equiv$ `&A[0]`)``
+  - *Incorrect:* `$A \equiv \&A[0]$` or `$*ptr = \&val$`
+- **Standard Math Operators:** Always use proper TeX operators:
+  - `\log`, `\lg`, `\ln` (never plain text `log`)
+  - `\min`, `\max`, `\gcd`
+  - `\le`, `\ge`, `\ne`, `\equiv`, `\approx`, `\in`, `\notin`, `\forall`, `\exists`
+  - `\lceil x \rceil`, `\lfloor x \rfloor` (never raw brackets `[x]`)
+  - `\dots` (never three loose dots `...`)
 
 ### Self-check before shipping any note
 
-- Ampersands or C++ code symbols inside math mode (e.g. `$\&A[0]$` -> change to ``(`A` $\equiv$ `&A[0]`)``)
+- Reserved TeX characters (`#`, `&`, `%`) or C++ code symbols inside math mode (e.g. `$1^a \# 1^b$` -> `$1^a$` `#` `$1^b$`, `$\&A[0]$` -> ``(`A` $\equiv$ `&A[0]`)``)
 - Unbraced multi-character exponents/subscripts (`2^n-1` instead of `2^{n-1}`)
 - `log`/`mod`/`min`/`max` typed as plain text inside math mode instead of `\log`/`\bmod`/`\min`/`\max`
 - Plain brackets where floor/ceiling was meant (tree-height and heap-array-index formulas are the usual offenders)
